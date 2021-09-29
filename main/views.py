@@ -1,7 +1,10 @@
-from django.shortcuts import render
-from .models import Hospital, Doctor, MainDoctor,Patients
+from django.shortcuts import render, redirect
+from .models import Hospital, Doctor, Patients
 from django.views.generic import CreateView
 from .forms import *
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate, login, logout
+
 
 def index(request):
     hospitals = Hospital.objects.all()
@@ -18,6 +21,36 @@ def detail(request, pk):
         'patients_detail':patients_detail
     }
     return render(request, "detail.html", context)
+
+
+
+
+def register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("index")
+    else:
+        form = UserCreationForm()
+    return render(request, "addnew.html", {"form":form})
+
+def signin(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('index')
+    else:
+        form = AuthenticationForm()
+
+    return render(request, 'addnew.html', {"form":form})
+
+def signout(request):
+    logout(request)
+    return render(request, 'addnew.html')
 
 class AddDoctors(CreateView):
     form_class = AddDoctor
@@ -38,3 +71,4 @@ class AddMainDoctors(CreateView):
     form_class = AddMainDoctor
     template_name = 'addnew.html'
     raise_exception = True
+
